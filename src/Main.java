@@ -9,7 +9,7 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        String path="/home/yuki/Code/test";
+        String path="/home/yuki/Code/hello world";
         String outPath="/home/yuki/Code/hello world2";
         FileOutputStream fos=new FileOutputStream("1.zip");
         Protocol protocolTest=new Protocol(path,fos),protocolTest2=new Protocol(outPath);
@@ -18,9 +18,15 @@ public class Main {
         //System.out.println(s);
         s=protocolTest2.readCmd(s);
         //System.out.println(s);
+        System.out.println(s);
         s=protocolTest.readCmd(s);
-        fos.close();
         FileInputStream fis=new FileInputStream("1.zip");
-        FileZipUtil.unZip(outPath,fis);
+        protocolTest2.setIs(fis);
+        System.out.println(s);
+        s=protocolTest2.readCmd(s);
+        System.out.println(s);
+        fos.close();
+
+
     }
 }

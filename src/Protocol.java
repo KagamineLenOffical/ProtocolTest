@@ -1,8 +1,6 @@
-import java.io.File;
-import java.io.OutputStream;
+import java.io.*;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.io.FileInputStream;
 import java.security.MessageDigest;
 
 enum Command{
@@ -20,6 +18,7 @@ enum Command{
 class Protocol {
     int fileCount=0;
     OutputStream os;
+    InputStream is;
     String rootPath;
     ArrayList<File> childFiles;
     String md5s[],paths[];
@@ -43,10 +42,12 @@ class Protocol {
         }
         return ChildFileDir;
     }
-
+    public Protocol(String rootPath,InputStream is){
+        this(rootPath);
+        this.is=is;
+    }
     public Protocol(String rootPath,OutputStream os){
-        this.rootPath=rootPath;
-        childFiles=new ArrayList<File>();
+        this(rootPath);
         this.os=os;
     }
     public Protocol(String rootPath){
@@ -62,8 +63,12 @@ class Protocol {
         this.rootPath = rootPath;
     }
 
+    public void setIs(InputStream is) {
+        this.is = is;
+    }
+
     //可能需要再加上每个文件的校验码
-    String readCmd(String stream){
+    String readCmd(String stream) throws IOException {
         String cmd=stream.substring(0,3);
         //System.out.println(cmd);
         if(cmd.equals(Command.FILELISTREQ.getCmd())){
@@ -156,6 +161,7 @@ class Protocol {
         if(cmd.equals(Command.FILESEND.getCmd())){
             //请读取到指令后外部处理接受流
             //处理文件内容
+            FileZipUtil.unZip(rootPath,is);
             return Command.SENDEND.getCmd();
         }
         return null; //此处没有读到任何指令 传输一定出现了问题
