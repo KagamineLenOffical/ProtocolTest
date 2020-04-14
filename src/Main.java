@@ -9,19 +9,16 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        String path="/home/yuki/Code/hello world";
+        String path="/home/yuki/Code/test";
         String outPath="/home/yuki/Code/hello world2";
-        Protocol protocolTest=new Protocol(path);
+        FileOutputStream fos=new FileOutputStream("1.zip");
+        Protocol protocolTest=new Protocol(path,fos),protocolTest2=new Protocol(outPath);
+
         String s=protocolTest.readCmd("011");
         //System.out.println(s);
-        Protocol ServerTest=new Protocol("/home");
-        s=ServerTest.readCmd(s);
+        s=protocolTest2.readCmd(s);
         //System.out.println(s);
-        ArrayList<File> files;
-        files=Protocol.readDir(new File(path));
-        files=Protocol.deleteDir(files);
-        FileOutputStream fos=new FileOutputStream("1.zip");
-        FileZipUtil.toZip(files,fos,path);
+        s=protocolTest.readCmd(s);
         fos.close();
         FileInputStream fis=new FileInputStream("1.zip");
         FileZipUtil.unZip(outPath,fis);

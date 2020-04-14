@@ -71,15 +71,19 @@ class Protocol {
 
             File root=new File(rootPath);
             childFiles=readDir(root);
-            childFiles=deleteDir(childFiles);
+            //childFiles=deleteDir(childFiles);
             if(childFiles.isEmpty()){
                 throw new NullPointerException("该文件夹下没有文件");
             }
             else{
                 StringBuffer retString=new StringBuffer(Command.SENDFILELIST.getCmd());
                 for(File chFile:childFiles){
-                    String tmpPath=chFile.getAbsolutePath().toString();
+                    String tmpPath=chFile.getAbsolutePath();
                     tmpPath=tmpPath.substring(rootPath.length());
+                    if(chFile.isDirectory()){
+                        retString.append(tmpPath+"/\n");
+                        continue;
+                    }
                     String md5=MD5CalUtil.getMD5(chFile);
                     retString.append(tmpPath+"\n"+md5+"\n");
                 }
@@ -91,16 +95,29 @@ class Protocol {
             String infos[];//tmp in order to run;
             String info=stream.substring(3);
             infos=info.split("\n");
-            md5s=new String[infos.length/2];
-            paths=new String[infos.length/2];
-            for(int i=0;i<infos.length/2;i++){
-                paths[i]=infos[i*2];
-                md5s[i]=infos[i*2+1];
+            int cntDirPath=0,cntFilePath=0;
+
+            md5s=new String[infos.length];
+            paths=new String[infos.length];
+            int cnt=0;
+            for(int i=0;i<infos.length;i++){
+                if(!infos[i].endsWith("/")){
+                    paths[cntFilePath]=infos[i];
+                    md5s[cntFilePath]=infos[++i];
+                    cntFilePath++;
+                }
+            }
+            for(int i=0;i<infos.length;i++){
+                if(infos[i].endsWith("/")){
+                    paths[cntFilePath+cntDirPath]=infos[i];
+                    cntDirPath++;
+                }
+                //System.out.println(paths[i]);
             }
             //++这里进行文件比较 留下需要更新的文件
             StringBuffer retString=new StringBuffer(Command.FILEREQ.getCmd());
             boolean isComplete=true;
-            for(int i=0;i<paths.length;i++){
+            for(int i=0;i<cntFilePath;i++){
                 String absolutePath=rootPath+paths[i];
                 File checkFile=new File(absolutePath);
                 if(!checkFile.exists()){
@@ -114,6 +131,14 @@ class Protocol {
                     isComplete=false;
                     retString.append(paths[i]+"\n");
                     childFiles.add(new File(absolutePath));
+                }
+            }
+            for(int i=cntFilePath;i<cntDirPath+cntFilePath;i++){
+                String absolutePath=rootPath+paths[i];
+                File CheckFile=new File(absolutePath);
+                if(!CheckFile.exists()){
+                    isComplete=false;
+                    retString.append(paths[i]+"\n");
                 }
             }
             if(!isComplete)return retString.toString();
@@ -131,10 +156,7 @@ class Protocol {
         if(cmd.equals(Command.FILESEND.getCmd())){
             //请读取到指令后外部处理接受流
             //处理文件内容
-            if(fileCount<paths.length){
-                return Command.FILEREQ.getCmd()+paths[fileCount++];
-            }
-            else return Command.SENDEND.getCmd();
+            return Command.SENDEND.getCmd();
         }
         return null; //此处没有读到任何指令 传输一定出现了问题
     }
